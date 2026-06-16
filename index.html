@@ -1,0 +1,1081 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>本命星盘 · 灵魂印记</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js">
+</script>
+<style>
+:root {
+  --bg:#000; --bg2:#0a0a0f; --card:rgba(28,28,34,0.72); --cardH:rgba(38,38,48,0.78);
+  --gb:rgba(255,255,255,0.10); --gbs:rgba(255,255,255,0.16); --gh:rgba(255,255,255,0.06);
+  --t1:#f5f5f7; --t2:#a1a1a6; --t3:#6e6e73;
+  --blu:#2997ff; --pur:#af52de; --pink:#ff375f; --ora:#ff9f0a; --teal:#30d158; --gold:#ffd60a;
+  --rxs:8px; --rsm:12px; --rmd:20px; --rlg:28px; --rxl:36px;
+  --fd:-apple-system,"SF Pro Display","PingFang SC",sans-serif;
+  --fb:-apple-system,"SF Pro Text","PingFang SC",sans-serif;
+  --stop:env(safe-area-inset-top,20px); --sbot:env(safe-area-inset-bottom,24px);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth;-webkit-font-smoothing:antialiased;background:var(--bg)}
+body{font-family:var(--fb);background:var(--bg);color:var(--t1);line-height:1.6;min-height:100vh;overflow-x:hidden;-webkit-tap-highlight-color:transparent;padding-bottom:var(--sbot)}
+#starfield{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:0}
+.container{position:relative;z-index:1;max-width:480px;margin:0 auto;padding:0 20px}
+
+/* Nav */
+.nav{position:sticky;top:0;z-index:100;padding:calc(var(--stop)+8px) 20px 10px;display:flex;gap:8px;overflow-x:auto;-webkit-backdrop-filter:blur(28px) saturate(180%);backdrop-filter:blur(28px) saturate(180%);background:rgba(0,0,0,0.55);border-bottom:1px solid var(--gb);scrollbar-width:none}
+.nav::-webkit-scrollbar{display:none}
+.nav-chip{flex-shrink:0;padding:7px 15px;border-radius:100px;font-size:12px;font-weight:500;color:var(--t2);background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.08);cursor:pointer;transition:all .25s ease;white-space:nowrap}
+.nav-chip.active,.nav-chip:hover{color:#fff;background:rgba(255,255,255,0.14);border-color:rgba(255,255,255,0.20)}
+
+/* Hero */
+.hero{padding:48px 0 36px;text-align:center}
+.hero-badge{display:inline-block;padding:6px 16px;border-radius:100px;font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--gold);background:rgba(255,214,10,0.10);border:1px solid rgba(255,214,10,0.18);margin-bottom:20px}
+.hero h1{font-family:var(--fd);font-size:38px;font-weight:700;letter-spacing:-.02em;line-height:1.15;background:linear-gradient(135deg,#f5f5f7 0%,#a1a1a6 50%,#f5f5f7 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:12px}
+.hero-sub{font-size:15px;color:var(--t2)}
+.hero-meta{display:flex;justify-content:center;gap:16px;flex-wrap:wrap;margin-top:20px}
+.hero-mi{display:flex;align-items:center;gap:6px;padding:8px 14px;border-radius:100px;font-size:12px;font-weight:500;color:var(--t2);background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.06)}
+.hero-md{width:6px;height:6px;border-radius:50%;background:var(--blu)}
+.hero-warn{margin:24px auto 0;max-width:360px;padding:12px 18px;border-radius:var(--rsm);font-size:12px;color:var(--ora);background:rgba(255,159,10,0.08);border:1px solid rgba(255,159,10,0.15);text-align:left;line-height:1.55}
+.hero-warn strong{color:#ffb340}
+
+/* Sections */
+.section{padding:32px 0}
+.sl{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--blu);margin-bottom:8px}
+.st{font-family:var(--fd);font-size:28px;font-weight:700;letter-spacing:-.02em;margin-bottom:8px;line-height:1.2}
+.sd{font-size:14px;color:var(--t2);margin-bottom:24px;line-height:1.55}
+
+/* Cards */
+.card{background:var(--card);border:1px solid var(--gb);border-radius:var(--rlg);padding:24px;margin-bottom:16px;-webkit-backdrop-filter:blur(24px) saturate(160%);backdrop-filter:blur(24px) saturate(160%);transition:all .3s ease;position:relative;overflow:hidden;cursor:pointer}
+.card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.08),transparent)}
+.card:active{transform:scale(.985)}
+.card-blu{border-left:3px solid var(--blu)}.card-pur{border-left:3px solid var(--pur)}.card-pink{border-left:3px solid var(--pink)}.card-gold{border-left:3px solid var(--gold)}.card-teal{border-left:3px solid var(--teal)}.card-ora{border-left:3px solid var(--ora)}
+.card-title{font-size:18px;font-weight:600;letter-spacing:-.01em;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.card-text{font-size:14px;color:var(--t2);line-height:1.65}
+.card-expand{display:none;margin-top:14px;padding-top:14px;border-top:1px solid rgba(255,255,255,0.06)}
+.card.expanded .card-expand{display:block}
+.card-chevron{font-size:12px;color:var(--t3);transition:transform .3s;flex-shrink:0;margin-left:auto}
+.card.expanded .card-chevron{transform:rotate(180deg)}
+
+/* Chart wrap */
+.cw{background:var(--card);border:1px solid var(--gb);border-radius:var(--rlg);padding:20px;margin-bottom:16px;-webkit-backdrop-filter:blur(24px) saturate(160%);backdrop-filter:blur(24px) saturate(160%)}
+.cw canvas{max-height:300px}
+
+/* Stats */
+.stat-row{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+.stat-label{width:72px;font-size:12px;font-weight:500;color:var(--t2);text-align:right;flex-shrink:0}
+.stat-track{flex:1;height:8px;background:rgba(255,255,255,0.06);border-radius:100px;overflow:hidden}
+.stat-fill{height:100%;border-radius:100px;transition:width 1.2s cubic-bezier(.25,.1,.25,1)}
+.stat-val{width:36px;font-size:11px;font-weight:600;color:var(--t2);flex-shrink:0}
+
+/* Gauge Canvas */
+.gauge-row{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:16px}
+.gauge-card{background:var(--card);border:1px solid var(--gb);border-radius:var(--rmd);padding:16px 10px;text-align:center;-webkit-backdrop-filter:blur(24px);backdrop-filter:blur(24px);cursor:pointer;transition:all .3s}
+.gauge-card:active{transform:scale(.96)}
+.gauge-card.selected{border-color:rgba(255,255,255,0.25);background:rgba(38,38,48,0.78)}
+.gauge-card canvas{display:block;margin:0 auto}
+.gauge-label{font-size:12px;font-weight:600;margin-top:4px;color:var(--t1)}
+.gauge-sub{font-size:10px;color:var(--t3);margin-top:2px}
+.gauge-detail{display:none;margin-top:10px;padding-top:10px;border-top:1px solid rgba(255,255,255,0.06);font-size:12px;color:var(--t2);line-height:1.7;text-align:left}
+.gauge-card.selected .gauge-detail{display:block}
+
+/* Scenario flip cards */
+.scenario-card{perspective:800px;height:200px;margin-bottom:16px;cursor:pointer}
+.scenario-inner{position:relative;width:100%;height:100%;transition:transform .6s cubic-bezier(.25,.1,.25,1);transform-style:preserve-3d}
+.scenario-card.flipped .scenario-inner{transform:rotateY(180deg)}
+.scenario-front,.scenario-back{position:absolute;width:100%;height:100%;backface-visibility:hidden;border-radius:var(--rlg);padding:20px 24px;display:flex;flex-direction:column;justify-content:center;background:var(--card);border:1px solid var(--gb)}
+.scenario-back{transform:rotateY(180deg);background:rgba(38,38,48,0.85)}
+.scenario-tag{font-size:10px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;margin-bottom:8px}
+.scenario-title{font-size:16px;font-weight:600;margin-bottom:6px}
+.scenario-text{font-size:13px;color:var(--t2);line-height:1.6}
+.scenario-hint{font-size:10px;color:var(--t3);margin-top:10px}
+
+/* Quote */
+.insight{margin:20px 0;padding:20px 24px;border-radius:var(--rlg);background:linear-gradient(135deg,rgba(175,82,222,0.08),rgba(41,151,255,0.08));border:1px solid rgba(175,82,222,0.15);text-align:center}
+.insight p{font-family:var(--fd);font-size:18px;font-weight:600;letter-spacing:-.01em;line-height:1.5;color:var(--t1)}
+.insight span{display:block;margin-top:8px;font-size:12px;color:var(--t3)}
+
+/* Tendency dashboard */
+.tend-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px}
+.tend-card{background:var(--card);border:1px solid var(--gb);border-radius:var(--rmd);padding:16px 10px;text-align:center;cursor:pointer;transition:all .3s;-webkit-backdrop-filter:blur(24px);backdrop-filter:blur(24px)}
+.tend-card:active{transform:scale(.95)}
+.tend-card.selected{border-color:rgba(255,255,255,0.25);background:rgba(38,38,48,0.82);box-shadow:0 0 20px rgba(175,82,222,0.1)}
+.tend-icon{font-size:24px;display:block;margin-bottom:4px}
+.tend-name{font-size:12px;font-weight:600;color:var(--t1)}
+.tend-level{font-size:20px;font-weight:700;margin:4px 0}
+.tend-bar{height:3px;border-radius:100px;margin:0 auto;width:60%}
+.tend-detail{display:none;margin-top:10px;padding-top:10px;border-top:1px solid rgba(255,255,255,0.06);font-size:11px;color:var(--t2);line-height:1.6;text-align:left}
+.tend-card.selected .tend-detail{display:block}
+
+/* Timeline */
+.tl-wrap{position:relative;padding-left:28px;margin:16px 0}
+.tl-wrap::before{content:'';position:absolute;left:8px;top:0;bottom:0;width:2px;background:linear-gradient(180deg,var(--blu),var(--pur),var(--pink))}
+.tl-item{margin-bottom:20px;position:relative;cursor:pointer}
+.tl-dot{position:absolute;left:-22px;top:4px;width:16px;height:16px;border-radius:50%;background:var(--bg);border:2px solid var(--blu);transition:all .3s}
+.tl-item:nth-child(2) .tl-dot{border-color:var(--pur)}
+.tl-item:nth-child(3) .tl-dot{border-color:var(--pink)}
+.tl-item:nth-child(4) .tl-dot{border-color:var(--ora)}
+.tl-item:nth-child(5) .tl-dot{border-color:var(--teal)}
+.tl-item.active .tl-dot{background:var(--blu);box-shadow:0 0 12px var(--blu)}
+.tl-item:nth-child(2).active .tl-dot{background:var(--pur);box-shadow:0 0 12px var(--pur)}
+.tl-item:nth-child(3).active .tl-dot{background:var(--pink);box-shadow:0 0 12px var(--pink)}
+.tl-item:nth-child(4).active .tl-dot{background:var(--ora);box-shadow:0 0 12px var(--ora)}
+.tl-item:nth-child(5).active .tl-dot{background:var(--teal);box-shadow:0 0 12px var(--teal)}
+.tl-phase{font-size:10px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--t3)}
+.tl-title{font-size:15px;font-weight:600;color:var(--t1);margin:2px 0}
+.tl-desc{font-size:12px;color:var(--t2);line-height:1.55;display:none}
+.tl-item.active .tl-desc{display:block}
+
+/* Table */
+.tbl{overflow-x:auto;margin-bottom:16px;border-radius:var(--rlg);background:var(--card);border:1px solid var(--gb);-webkit-backdrop-filter:blur(24px);backdrop-filter:blur(24px)}
+.styled-table{width:100%;border-collapse:collapse;font-size:12px;min-width:500px}
+.styled-table th{background:rgba(255,255,255,0.04);padding:10px 14px;text-align:left;font-weight:600;font-size:11px;letter-spacing:.04em;text-transform:uppercase;color:var(--t2);border-bottom:1px solid var(--gb)}
+.styled-table td{padding:10px 14px;border-bottom:1px solid rgba(255,255,255,0.04);color:var(--t1);line-height:1.5}
+.styled-table tr:last-child td{border-bottom:none}
+
+/* Flow */
+.flow{display:flex;flex-direction:column;gap:0;margin:16px 0}
+.flow-item{display:flex;align-items:center;gap:14px;padding:10px 0}
+.flow-dot{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;flex-shrink:0;background:rgba(41,151,255,0.12);color:var(--blu);border:1.5px solid rgba(41,151,255,0.25)}
+.flow-arrow{color:var(--t3);font-size:14px;margin:-6px 0 -6px 14px}
+.flow-text{font-size:14px;color:var(--t1);font-weight:500}
+
+/* Tags */
+.tag-row{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}
+.tag{padding:6px 14px;border-radius:100px;font-size:12px;font-weight:500;color:var(--t1);background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.08)}
+.tag-sm{font-size:10px;padding:4px 10px}
+
+/* Before/After */
+.ba-wrap{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px}
+.ba-card{background:var(--card);border-radius:var(--rmd);padding:16px 14px;text-align:center;border:1px solid var(--gb)}
+.ba-before{border-left:3px solid var(--pink)}
+.ba-after{border-left:3px solid var(--teal)}
+.ba-label{font-size:10px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;margin-bottom:8px}
+.ba-title{font-size:15px;font-weight:600;margin-bottom:6px}
+.ba-text{font-size:11px;color:var(--t2);line-height:1.55}
+
+/* Scoreboard */
+.sb-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:16px}
+.sb-card{background:var(--card);border:1px solid var(--gb);border-radius:var(--rmd);padding:16px 12px;text-align:center}
+.sb-icon{font-size:22px;display:block;margin-bottom:4px}
+.sb-name{font-size:11px;color:var(--t3);font-weight:500}
+.sb-val{font-size:22px;font-weight:700;margin:4px 0}
+
+/* Footer */
+.footer{text-align:center;padding:40px 20px;color:var(--t3);font-size:12px}
+.footer-emoji{font-size:24px;margin-bottom:8px;display:block}
+
+/* Animations */
+@keyframes fIn{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+@keyframes glow{0%,100%{box-shadow:0 0 20px rgba(41,151,255,0.08)}50%{box-shadow:0 0 40px rgba(41,151,255,0.18)}}
+@keyframes countUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.float-card{animation:float 5s ease-in-out infinite,glow 4s ease-in-out infinite}
+
+/* Responsive */
+@media(max-width:380px){
+  .gauge-row{grid-template-columns:1fr 1fr}
+  .tend-grid{grid-template-columns:1fr 1fr}
+  .sb-grid{grid-template-columns:1fr 1fr}
+  .hero h1{font-size:30px}
+  .st{font-size:22px}
+}
+</style>
+</head>
+<body>
+<canvas id="starfield"></canvas>
+
+<nav class="nav" id="topNav">
+  <div class="nav-chip active" data-target="hero">总览</div>
+  <div class="nav-chip" data-target="planets">行星</div>
+  <div class="nav-chip" data-target="personality">性格</div>
+  <div class="nav-chip" data-target="love">爱情</div>
+  <div class="nav-chip" data-target="career">事业</div>
+  <div class="nav-chip" data-target="wealth">财运</div>
+  <div class="nav-chip" data-target="life">人生课题</div>
+  <div class="nav-chip" data-target="summary">总结</div>
+</nav>
+
+<div class="container">
+
+<!-- ══════════ HERO ══════════ -->
+<section class="hero" id="hero">
+  <div class="hero-badge">✦ Natal Chart Analysis</div>
+  <h1>灵魂印记</h1>
+  <p class="hero-sub">本命星盘深度解读</p>
+  <div class="hero-meta">
+    <div class="hero-mi"><span class="hero-md"></span>2002.07.16</div>
+    <div class="hero-mi"><span class="hero-md" style="background:var(--pur)"></span>02:07 AM</div>
+    <div class="hero-mi"><span class="hero-md" style="background:var(--pink)"></span>广东佛山顺德</div>
+  </div>
+  <div class="hero-warn">⚠️ <strong>上升点金牛 29°30′</strong>，极近双子。若出生时间误差超过几分钟，上升、宫位、MC等判断会明显改变。以下分析默认凌晨 2:07 为准确时间。</div>
+</section>
+
+<!-- ══════════ 总论 ══════════ -->
+<section class="section" id="overview">
+  <div class="sl">Core Identity</div>
+  <div class="st">人格总论</div>
+  <p class="sd">外表稳定、内心敏感、表达欲很强，但容易自我压抑的人。</p>
+  <div class="card card-pur float-card" style="text-align:center;cursor:default">
+    <div class="card-title" style="justify-content:center;font-size:16px">✨ 核心优势</div>
+    <p class="card-text">共情力 · 审美感 · 语言表达 · 内容输出 · 商业转化能力</p>
+    <p class="card-text" style="margin-top:10px;color:var(--ora)">⚠️ 核心短板：关系中容易过度在意对方，怕被否定</p>
+  </div>
+  <div class="insight">
+    <p>"从围着别人转、被关系影响，走向建立自己的声音、身份、作品和个人品牌。"</p>
+    <span>—— 人生主要发展方向</span>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════ -->
+<!-- 行星配置 · 精简版（保留核心交互） -->
+<!-- ═══════════════════════════════════════ -->
+<section class="section" id="planets">
+  <div class="sl">Planetary Positions</div>
+  <div class="st">行星配置</div>
+  <p class="sd">点击行星/宫位卡片查看详细解读。点击标签切换视角。</p>
+
+  <!-- Tab Bar -->
+  <div style="display:flex;gap:6px;padding:4px;background:rgba(255,255,255,0.04);border-radius:100px;border:1px solid var(--gb);margin-bottom:20px" id="planetTabBar">
+    <button class="nav-chip active" data-tab="tab-planets" style="flex:1;text-align:center;font-size:12px">🪐 行星</button>
+    <button class="nav-chip" data-tab="tab-houses" style="flex:1;text-align:center;font-size:12px">🏠 十二宫</button>
+    <button class="nav-chip" data-tab="tab-aspects" style="flex:1;text-align:center;font-size:12px">🔗 相位</button>
+    <button class="nav-chip" data-tab="tab-elements" style="flex:1;text-align:center;font-size:12px">🔥 元素</button>
+  </div>
+
+  <!-- Tab Panels -->
+  <div id="tab-planets" class="tp active">
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:20px" id="planetGrid"></div>
+    <div id="planetDetail" style="display:none;background:var(--card);border:1px solid var(--gbs);border-radius:var(--rlg);padding:20px 24px;margin-bottom:16px;animation:fIn .3s ease">
+      <div style="font-size:20px;font-weight:700;margin-bottom:4px" id="pdName"></div>
+      <div style="font-size:12px;color:var(--t3);margin-bottom:12px" id="pdSub"></div>
+      <div style="font-size:13px;color:var(--t2);line-height:1.7" id="pdInfo"></div>
+    </div>
+    <div class="card card-gold" style="cursor:default">
+      <div class="card-title">🔥 3宫巨蟹群星聚——表达者的天赋配置</div>
+      <p class="card-text">太阳、木星、火星三颗星齐聚第3宫，四颗星集中在沟通表达领域。将情绪、记忆、经验、关系感受转化为语言与内容的天赋配置。</p>
+      <div class="tag-row"><span class="tag">太阳巨蟹 3宫</span><span class="tag">水星巨蟹 2宫</span><span class="tag">木星巨蟹 3宫</span><span class="tag">火星狮子 3宫</span></div>
+    </div>
+  </div>
+
+  <div id="tab-houses" class="tp" style="display:none">
+    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:20px" id="houseGrid"></div>
+  </div>
+
+  <div id="tab-aspects" class="tp" style="display:none">
+    <div class="cw"><div style="font-size:13px;font-weight:600;margin-bottom:8px;color:var(--t2)">🔗 主要相位分布</div><canvas id="aspectChart"></canvas></div>
+    <div id="aspectGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;margin-bottom:16px"></div>
+    <div class="card card-pur" style="cursor:default">
+      <div class="card-title">🔍 相位解读要点</div>
+      <p class="card-text"><strong>日木合相（3宫巨蟹）</strong>——"越表达越幸运"。<br><strong>金土三分</strong>——审美与责任感的和谐共振。<br><strong>月冥四分</strong>——盘中最大张力，亲密关系是成长最快的领域。</p>
+    </div>
+  </div>
+
+  <div id="tab-elements" class="tp" style="display:none">
+    <div class="cw"><div style="font-size:13px;font-weight:600;margin-bottom:8px;color:var(--t2)">🌍 元素分布</div><canvas id="elementChart"></canvas></div>
+    <div class="cw"><div style="font-size:13px;font-weight:600;margin-bottom:8px;color:var(--t2)">🔄 星座模式</div><canvas id="modalityChart"></canvas></div>
+    <div class="cw"><div style="font-size:13px;font-weight:600;margin-bottom:8px;color:var(--t2)">🏠 宫位行星数</div><canvas id="houseChart"></canvas></div>
+    <div class="card card-teal" style="cursor:default">
+      <div class="card-title">🧭 半球分析</div>
+      <div class="stat-row"><span class="stat-label">下半球</span><div class="stat-track"><div class="stat-fill" style="width:70%;background:var(--teal)"></div></div><span class="stat-val">7颗</span></div>
+      <div class="stat-row"><span class="stat-label">上半球</span><div class="stat-track"><div class="stat-fill" style="width:40%;background:var(--pur)"></div></div><span class="stat-val">4颗</span></div>
+      <p class="card-text" style="font-size:12px;margin-top:12px"><strong>下半球主导</strong>——更关注个人内在世界、家庭、自我成长。适合先建立自我再外展。</p>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════ -->
+<!-- 性格底色 · 每个维度单独交互可视化 -->
+<!-- ═══════════════════════════════════════ -->
+<section class="section" id="personality">
+  <div class="sl">Personality Deep Dive</div>
+  <div class="st">性格底色</div>
+  <p class="sd">敏感型表达者，非冷感型人格。点击每张卡片展开详细分析 + 真实案例。</p>
+
+  <!-- ═══ 1. 人格核心 ═══ -->
+  <div class="card card-pur" onclick="this.classList.toggle('expanded')">
+    <div class="card-title">🎯 人格核心：敏感型表达者 <span class="card-chevron">▼</span></div>
+    <p class="card-text">不是冷感型人格，很重感受，很会捕捉氛围，也很容易被环境、关系、语言细节影响。</p>
+    <div class="card-expand">
+      <div style="margin-bottom:10px"><strong style="color:var(--blu)">星盘依据：</strong>太阳巨蟹 3宫 · 水星巨蟹 2宫 · 木星巨蟹 3宫</div>
+      <div style="margin-bottom:10px"><strong style="color:var(--ora)">现实表现：</strong></div>
+      <div style="font-size:12px;color:var(--t2);line-height:1.8">
+        • 会记住别人很久以前说过的一句话<br>
+        • 对语气、态度、忽冷忽热极度敏感<br>
+        • 表面平静，内心戏很多——一个眼神就能写三页心理活动<br>
+        • 不喜被粗暴对待，厌恶没有安全感的环境<br>
+        • 很容易从细节判断别人是否真诚<br>
+        • 对人有保护欲，但自己也很需要被保护<br>
+        • 能把一段2分钟的对视写成2000字的内心独白
+      </div>
+      <div style="margin-top:10px;padding:12px;border-radius:var(--rsm);background:rgba(175,82,222,0.08);font-size:12px;color:var(--pur);line-height:1.6">
+        💡 <strong>场景案例：</strong>同事在工作群里只回了一个"嗯"，他会想："是不是我之前说了什么让他不高兴？还是他今天心情不好？要不要私聊问一下？算了如果问了显得我太敏感..."——而对方可能只是当时在忙。
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ 2. 外在气质 ═══ -->
+  <div class="card card-teal" onclick="this.classList.toggle('expanded')">
+    <div class="card-title">🎭 外在给人的感觉 <span class="card-chevron">▼</span></div>
+    <p class="card-text">慢热、稳定、有审美、不浮躁、有自己的标准。看起来温和但不好随便靠近。</p>
+    <div class="card-expand">
+      <div style="margin-bottom:10px"><strong style="color:var(--blu)">星盘依据：</strong>上升金牛 · 命主金星处女4宫 · 土星1宫</div>
+      <div style="margin-bottom:10px"><strong style="color:var(--ora)">别人第一次见他的印象：</strong></div>
+      <div style="font-size:12px;color:var(--t2);line-height:1.8">
+        • "这个人话不多，但好像什么都看在眼里"<br>
+        • "穿衣服很有品味，不是那种爆款型，是耐看型"<br>
+        • "有点距离感，不知道他在想什么"<br>
+        • "笑起来很好看，但不常笑"<br>
+        • "熟了之后反差巨大——原来这么能说"
+      </div>
+      <div style="margin-top:10px;padding:12px;border-radius:var(--rsm);background:rgba(48,209,88,0.08);font-size:12px;color:var(--teal);line-height:1.6">
+        💡 <strong>场景案例：</strong>第一次参加聚会，他坐在角落安静观察了半小时。有人觉得他高冷。但有人主动聊起摄影/电影/一个他感兴趣的话题，他眼睛立刻亮了，开始滔滔不绝——旁边的人惊讶"原来你这么能说！"
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ 3. 内在需求 ═══ -->
+  <div class="card card-blu" onclick="this.classList.toggle('expanded')">
+    <div class="card-title">🔮 内在真正需要什么 <span class="card-chevron">▼</span></div>
+    <p class="card-text">不是刺激，而是稳定回应、可预期的关系、被认真对待、被稳定选择、有安全边界的亲密。</p>
+    <div class="card-expand">
+      <div style="margin-bottom:10px"><strong style="color:var(--blu)">星盘依据：</strong>月亮天秤5宫 · 金星处女4宫 · 七宫天蝎 · 冥王星7宫</div>
+      <div style="margin-bottom:10px"><strong style="color:var(--ora)">他真正需要的是：</strong></div>
+      <div style="font-size:12px;color:var(--t2);line-height:1.8">
+        • 一个能让他放松、不用一直防御的环境<br>
+        • 对方"说到做到"，而不是光说好听的话<br>
+        • 被认真对待——认真回复消息、认真记住他说过的话<br>
+        • 对方不会突然消失，不会忽冷忽热<br>
+        • 情绪上被理解，而非被敷衍一句"你想多了"<br>
+        • 一个有安全边界的亲密——亲近但不会窒息
+      </div>
+      <div style="margin-top:10px;padding:12px;border-radius:var(--rsm);background:rgba(41,151,255,0.08);font-size:12px;color:var(--blu);line-height:1.6">
+        💡 <strong>关键洞察：</strong>他可以喜欢浪漫，也会被美感、氛围、暧昧感吸引——但真正决定他是否长期投入的，是对方是否靠谱、稳定、细节上是否让他安心。一次放鸽子比一次表白失败更让他受伤。
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ 4. 情绪模式 ═══ -->
+  <div class="card card-pink" onclick="this.classList.toggle('expanded')">
+    <div class="card-title">🌊 情绪模式：表面讲道理，内心很失衡 <span class="card-chevron">▼</span></div>
+    <p class="card-text">不一定会马上爆发，但会在心里反复想很久。嘴上说没事，心里记很久。</p>
+    <div class="card-expand">
+      <div style="margin-bottom:10px"><strong style="color:var(--blu)">星盘依据：</strong>月亮天秤5宫 · 太阳巨蟹 · 土星1宫 · 冥王星7宫</div>
+      <div style="margin-bottom:10px"><strong style="color:var(--ora)">情绪触发顺序：</strong></div>
+      <div style="font-size:12px;color:var(--t2);line-height:1.8">
+        ① 态度变化（对方突然变冷）→ ② 关系不平衡（他付出更多）→ ③ 被忽视（消息不回复）→ ④ 被否定（他的审美/能力被贬）→ ⑤ 被冷处理（不说话/不解释）→ ⑥ 不公平（凭什么？）
+      </div>
+      <div style="margin-top:10px;padding:12px;border-radius:var(--rsm);background:rgba(255,55,95,0.08);font-size:12px;color:var(--pink);line-height:1.6">
+        💡 <strong>场景案例：</strong>伴侣今天和他说话的语气比平时冷了一点。他不会当场发作。但接下来一整天，他会反复回想：是不是我做了什么？还是对方遇到了什么事？要不要问？问了会不会显得太粘人？——如果对方一直不解释，他会从热变冷，用沉默保护自己。
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ 5. 思维与表达 ═══ -->
+  <div class="card card-gold" onclick="this.classList.toggle('expanded')">
+    <div class="card-title">💬 思维与表达：故事化·情绪化·内容型 <span class="card-chevron">▼</span></div>
+    <p class="card-text">不是纯逻辑型，更偏讲故事、做情绪包装、用细节打动人。善于把感受转化成文字/影像/策划/作品。</p>
+    <div class="card-expand">
+      <div style="margin-bottom:10px"><strong style="color:var(--blu)">星盘依据：</strong>水星巨蟹2宫 · 太阳/木星/火星3宫 · 北交点双子1宫</div>
+      <div style="margin-bottom:10px"><strong style="color:var(--ora)">他适合的表达方式：</strong></div>
+      <div class="tag-row"><span class="tag">写文案</span><span class="tag">写脚本</span><span class="tag">做访谈</span><span class="tag">影像叙事</span><span class="tag">品牌故事</span><span class="tag">新媒体</span><span class="tag">情绪型表达</span><span class="tag">生活方式内容</span><span class="tag">有温度的商业表达</span></div>
+      <div style="margin-top:10px;padding:12px;border-radius:var(--rsm);background:rgba(255,214,10,0.08);font-size:12px;color:var(--gold);line-height:1.6">
+        💡 <strong>场景案例：</strong>别人介绍一款咖啡："这款豆子来自哥伦比亚，海拔1800米。"他介绍同一款咖啡："喝这杯的时候，你会想到安第斯山脉的云雾、清晨摘豆的农人指尖的温度，和一种很安静但很确定的幸福感。"——同样的信息，他包装出来就有故事感。
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ 6. 行动力 ═══ -->
+  <div class="card card-ora" onclick="this.classList.toggle('expanded')">
+    <div class="card-title">⚡ 行动力：爆发型，需要情绪点燃 <span class="card-chevron">▼</span></div>
+    <p class="card-text">不是持续蛮干型。有兴趣时行动很快，被否定时容易缩回去。需要"我做这件事有价值"才会真正动起来。</p>
+    <div class="card-expand">
+      <div style="margin-bottom:10px"><strong style="color:var(--blu)">星盘依据：</strong>火星狮子3宫 · 月亮5宫 · 土星1宫</div>
+      <div style="margin-bottom:10px"><strong style="color:var(--ora)">行动力开关：</strong></div>
+      <div style="font-size:12px;color:var(--t2);line-height:1.8">
+        ✅ 被认可时 → 表现力爆棚<br>
+        ✅ 有兴趣时 → 行动极快<br>
+        ✅ 被看见时 → 行动力翻倍<br>
+        ❌ 被否定时 → 容易缩回去<br>
+        ❌ 无意义任务 → 疲软拖延<br>
+        ❌ 没人看见 → 动力骤降
+      </div>
+      <div style="margin-top:10px;padding:12px;border-radius:var(--rsm);background:rgba(255,159,10,0.08);font-size:12px;color:var(--ora);line-height:1.6">
+        💡 <strong>场景案例：</strong>如果老板说"把这个表填完"，他可能拖到deadline。但如果老板说"我想听听你对这个项目的看法，你的审美很好"，他当晚就能做出一份带视觉方案和情绪分析的完整提案。点燃他的不是任务，是"被需要"的感觉。
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ 7. 最容易被触发 ═══ -->
+  <div class="card card-pur" onclick="this.classList.toggle('expanded')">
+    <div class="card-title">🎯 最容易被他人的什么行为触发？ <span class="card-chevron">▼</span></div>
+    <p class="card-text">12种最容易让他情绪波动的场景，每一条都来自星盘配置的深层逻辑。</p>
+    <div class="card-expand">
+      <div style="font-size:12px;color:var(--t2);line-height:2">
+        🔴 被冷落、被忽视（月亮天秤——最怕关系信号中断）<br>
+        🔴 亲密关系里不确定（冥王星7宫——需要深度确认）<br>
+        🔴 别人否定他的审美/能力/表达（土星1宫——自我怀疑的伤口）<br>
+        🔴 家庭或居住环境不稳定（金星4宫——家是安全感的物理基座）<br>
+        🔴 被强势的人压制（冥王星7宫——控制与被控制的博弈）<br>
+        🔴 关系里出现控制、试探、隐瞒（七宫天蝎——真诚是底线）<br>
+        🔴 自己努力了但没有被看见（火星狮子3宫——表现欲需要回应）<br>
+        🔴 合作关系不透明（天秤能量——公平感是情绪平衡器）<br>
+        🔴 对方说话态度轻慢（巨蟹敏感——态度比内容更伤人）<br>
+        🔴 重要的人突然变冷（月亮5宫——恋爱感被突然切断）<br>
+        🔴 被迫在不安全的环境表达自己（土星1宫——最大的恐惧）<br>
+        🔴 被要求只执行、不思考、不表达（3宫群星——核心人格被否定）
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ 外在 vs 内在 · 场景翻转卡 ═══ -->
+  <div class="cw">
+    <div style="font-size:13px;font-weight:600;margin-bottom:16px;color:var(--t2)">🎭 外在 vs 内在 · 点击卡片翻转</div>
+    <div id="scenarioCards"></div>
+  </div>
+
+  <!-- ═══ 性格雷达图 ═══ -->
+  <div class="cw">
+    <div style="font-size:13px;font-weight:600;margin-bottom:8px;color:var(--t2)">🕸️ 性格维度雷达</div>
+    <canvas id="radarChart"></canvas>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════ -->
+<!-- 爱情密码 · 6维度可视化 -->
+<!-- ═══════════════════════════════════════ -->
+<section class="section" id="love">
+  <div class="sl">Love & Relationships</div>
+  <div class="st">爱情密码</div>
+  <p class="sd">浪漫但现实，需要稳定承诺。七宫天蝎 + 冥王星 7 宫——关系是人生最重要的试炼场。</p>
+
+  <!-- 爱情雷达 -->
+  <div class="cw">
+    <div style="font-size:13px;font-weight:600;margin-bottom:8px;color:var(--t2)">💘 爱情多维雷达</div>
+    <canvas id="loveRadar"></canvas>
+  </div>
+
+  <!-- 6维度交互卡片 -->
+  <div style="font-size:13px;font-weight:600;margin-bottom:12px;color:var(--t2)">🔍 六大关系模式 · 点击展开分析</div>
+  <div class="tend-grid" id="loveTendGrid"></div>
+
+  <!-- 安全感来源 -->
+  <div class="card card-pur" onclick="this.classList.toggle('expanded')">
+    <div class="card-title">🛡️ 安全感四大支柱 <span class="card-chevron">▼</span></div>
+    <p class="card-text">他的安全感不是来自轰轰烈烈的承诺，而是来自这四个具体的日常信号。</p>
+    <div class="card-expand">
+      <div style="font-size:13px;color:var(--t2);line-height:1.9">
+        <strong>① 稳定回应</strong>——消息、态度、承诺不能飘。不需要秒回，但需要"一定会回"。<br><br>
+        <strong>② 生活秩序</strong>——家、空间、日常节奏要稳定。一个整洁的有审美的家 = 最好的情绪镇定剂。<br><br>
+        <strong>③ 被认真选择</strong>——不能让他一直猜对方到底要不要这段关系。他要的是"确定的被选择"，不是"顺便在一起"。<br><br>
+        <strong>④ 价值确认</strong>——他需要知道自己在对方心里是重要的。不是通过礼物，而是通过对方"记得他说过的话"、"在意他的感受"。
+      </div>
+      <div style="margin-top:10px;padding:12px;border-radius:var(--rsm);background:rgba(175,82,222,0.08);font-size:12px;color:var(--pur);line-height:1.6">
+        💡 <strong>关键：</strong>比起口头承诺，他更看重日常细节。一次认真回复 > 十句"我爱你"。一次记住他说过的小事 > 一次昂贵的礼物。
+      </div>
+    </div>
+  </div>
+
+  <div class="insight">
+    <p>"最适合：稳定、认真、有深度、能沟通的长期关系。<br>最不适合：暧昧、冷暴力、控制、反复拉扯、不确定关系。"</p>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════ -->
+<!-- 事业 · 交互时间线 -->
+<!-- ═══════════════════════════════════════ -->
+<section class="section" id="career">
+  <div class="sl">Career & Vocation</div>
+  <div class="st">事业罗盘</div>
+  <p class="sd">MC 水瓶 + 天王星 10 宫 + 3 宫群星——内容、审美、传播、新媒体方向的天然适配者。</p>
+
+  <div class="cw">
+    <div style="font-size:13px;font-weight:600;margin-bottom:8px;color:var(--t2)">🎯 职业方向契合度</div>
+    <canvas id="careerChart"></canvas>
+  </div>
+
+  <div class="card card-teal" onclick="this.classList.toggle('expanded')">
+    <div class="card-title">🚀 最佳事业定位 <span class="card-chevron">▼</span></div>
+    <p class="card-text">不是"我帮别人完成任务"，而是"我用自己的审美、表达和判断力，帮别人完成更有价值的内容或项目"。</p>
+    <div class="card-expand">
+      <div style="font-size:12px;color:var(--t2);line-height:1.7">
+        <strong>不适合：</strong>完全死板的稳定职业、低自由度固定岗位、纯体力/纯行政执行。<br>
+        <strong>最适合：</strong>"有结构的自由发展"——先在一个平台建立专业信用，再逐渐做个人品牌或副业。<br><br>
+        最好的事业定位宣言不是"我帮别人完成任务"，而是<strong>"我用自己的审美、表达和判断力，帮别人完成更有价值的内容或项目"</strong>。
+      </div>
+    </div>
+  </div>
+
+  <!-- 交互式事业时间线 -->
+  <div class="card card-blu" style="cursor:default">
+    <div class="card-title">⏳ 事业节奏 · 点击每个阶段展开</div>
+    <div class="tl-wrap" id="careerTimeline"></div>
+  </div>
+
+  <!-- 个人品牌分析 -->
+  <div class="card card-gold" onclick="this.classList.toggle('expanded')">
+    <div class="card-title">🌟 个人品牌路径 <span class="card-chevron">▼</span></div>
+    <p class="card-text">适合而且这是重点方向之一。北交点1宫+太阳/木星3宫+MC水瓶——天选的个人品牌型创作者。</p>
+    <div class="card-expand">
+      <div style="font-size:12px;color:var(--t2);line-height:1.7">
+        他的个人品牌最好不是靠"强人设"，而是靠：审美稳定 → 内容有温度 → 表达有观点 → 作品有记忆点 → 能把复杂感受讲清楚。<br><br>
+        适合做的个人品牌类型：
+      </div>
+      <div class="tag-row"><span class="tag">视觉创作者</span><span class="tag">摄影师</span><span class="tag">内容策划人</span><span class="tag">审美博主</span><span class="tag">情绪/成长表达者</span><span class="tag">生活方式品牌主理人</span><span class="tag">AI+视觉创作者</span><span class="tag">个人IP策划人</span></div>
+      <div style="margin-top:10px;padding:12px;border-radius:var(--rsm);background:rgba(255,214,10,0.08);font-size:12px;color:var(--gold);line-height:1.6">
+        💡 <strong>更适合的曝光方式：</strong>作品先于本人 → 观点先于情绪 → 内容先于私生活 → 让别人先通过作品记住他，再逐渐认识他本人。不适合过度消耗隐私或过度迎合流量。
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════ -->
+<!-- 财运 · 交互策略板 -->
+<!-- ═══════════════════════════════════════ -->
+<section class="section" id="wealth">
+  <div class="sl">Wealth & Finance</div>
+  <div class="st">财运密码</div>
+  <p class="sd">赚钱能力不错——靠表达、审美、内容、信息整合、人脉传播和情绪价值赚钱。</p>
+
+  <div class="cw">
+    <div style="font-size:13px;font-weight:600;margin-bottom:8px;color:var(--t2)">💰 收入渠道适合度</div>
+    <canvas id="wealthChart"></canvas>
+  </div>
+
+  <!-- 交互式财富路径 -->
+  <div class="card card-gold" style="cursor:default">
+    <div class="card-title">💡 财富成长路径 · 点击每个阶段</div>
+    <div class="tl-wrap" id="wealthTimeline"></div>
+  </div>
+
+  <!-- 投资/合作/创业 评分 -->
+  <div class="sb-grid" id="wealthScoreboard"></div>
+
+  <div class="card card-ora" onclick="this.classList.toggle('expanded')">
+    <div class="card-title">⚠️ 财务风险与护城河 <span class="card-chevron">▼</span></div>
+    <p class="card-text">有一定财务波动，需要建立多层财务护城河。</p>
+    <div class="card-expand">
+      <div style="font-size:12px;color:var(--t2);line-height:1.7">
+        <strong>风险来源：</strong>事业方向阶段性变化（天王星10宫）· 合作关系影响收入（冥王星7宫）· 情绪状态影响消费（火星3宫+月亮5宫）· 为成长/设备/内容投入较多（木星3宫）<br><br>
+        <strong>最适合资产：</strong>作品集 · 账号 · 个人品牌 · 方法论 · 社群 · 内容产品<br>
+        <strong>最该培养：</strong>财务规划能力 · 报价能力 · 合同意识 · 长期复利思维<br>
+        <strong>最忌讳：</strong>为别人担保 · 关系中金钱边界不清 · 冲动合伙 · 情绪性投资
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════ -->
+<!-- 人生课题 · Before/After 交互 -->
+<!-- ═══════════════════════════════════════ -->
+<section class="section" id="life">
+  <div class="sl">Life Lessons</div>
+  <div class="st">人生课题</div>
+  <p class="sd">北交点双子 1 宫 + 南交点射手 7 宫 + 冥王星 7 宫 + 土星 1 宫——灵魂级成长路线。</p>
+
+  <div class="insight">
+    <p>"从'我怕别人不选我'<br>变成'我先选择我自己'。"</p>
+    <span>—— 核心课题</span>
+  </div>
+
+  <!-- Before/After对比 -->
+  <div class="cw">
+    <div style="font-size:13px;font-weight:600;margin-bottom:14px;color:var(--t2)">🔄 灵魂进化：从旧模式到新模式</div>
+    <div class="ba-wrap">
+      <div class="ba-card ba-before">
+        <div class="ba-label" style="color:var(--pink)">⬅ 南交点 ♐ 7宫 · 旧模式</div>
+        <div class="ba-title" style="color:var(--pink);font-size:14px">过度依附关系</div>
+        <div class="ba-text">
+          • 被强势的人影响判断<br>
+          • 在关系中放大自我怀疑<br>
+          • 习惯从别人那里寻找答案<br>
+          • 用沉默代替表达<br>
+          • 把安全感寄托在伴侣/外界认可上<br>
+          • 害怕选择自己后别人不满意
+        </div>
+      </div>
+      <div class="ba-card ba-after">
+        <div class="ba-label" style="color:var(--teal)">➡ 北交点 ♊ 1宫 · 新方向</div>
+        <div class="ba-title" style="color:var(--teal);font-size:14px">建立独立自我</div>
+        <div class="ba-text">
+          • 建立自己的声音和身份<br>
+          • 独立表达，不讨好<br>
+          • 自己做出判断和选择<br>
+          • 直接说出口而不是憋在心里<br>
+          • 安全感来自内在而非外部<br>
+          • 越敢表达自己，人生越顺
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 心理限制 -->
+  <div class="card card-pink" onclick="this.classList.toggle('expanded')">
+    <div class="card-title">🔓 需要突破的十大心理限制 <span class="card-chevron">▼</span></div>
+    <p class="card-text">他的人生不是缺少能力，而是容易因为自我怀疑和关系牵制，晚一点才释放真正实力。</p>
+    <div class="card-expand">
+      <div style="font-size:12px;color:var(--t2);line-height:2">
+        1. 怕出错——土星1宫让他觉得"说错了很丢脸"<br>
+        2. 怕被评价——怕公开之后被比较<br>
+        3. 怕被抛下——月亮天秤+冥王星7宫，关系断裂=情绪地震<br>
+        4. 怕关系破裂——所以有时候宁愿委屈自己<br>
+        5. 怕表达不够好——土星1宫+水星巨蟹，总觉得"我还可以说得更好"<br>
+        6. 怕选择自己以后别人不满意——南交点7宫讨好的惯性<br>
+        7. 怕主动争取显得太强势——月亮天秤追求和谐<br>
+        8. 怕真正想要的东西不被支持——巨蟹需要情感后盾<br>
+        9. 怕不够专业——土星1宫的自我审查<br>
+        10. 怕"我其实很棒"——最深的恐惧可能是"如果我真的很厉害，为什么还这么没安全感？"
+      </div>
+    </div>
+  </div>
+
+  <!-- 能力发展 -->
+  <div class="card card-teal" onclick="this.classList.toggle('expanded')">
+    <div class="card-title">🌱 最值得发展的15项能力 <span class="card-chevron">▼</span></div>
+    <p class="card-text">把敏感变成洞察。把情绪变成作品。把审美变成收入。把表达变成个人资产。</p>
+    <div class="card-expand">
+      <div class="tag-row">
+        <span class="tag">公开表达能力</span><span class="tag">写作能力</span><span class="tag">演讲能力</span>
+        <span class="tag">讲故事能力</span><span class="tag">审美系统化</span><span class="tag">商业策划</span>
+        <span class="tag">个人IP定位</span><span class="tag">社群影响力</span><span class="tag">谈判和边界感</span>
+        <span class="tag">财务规划</span><span class="tag">作品集管理</span><span class="tag">情绪稳定</span>
+        <span class="tag">长期输出能力</span><span class="tag">合作筛选</span><span class="tag">报价和商业闭环</span>
+      </div>
+      <div style="margin-top:14px;padding:12px;border-radius:var(--rsm);background:rgba(48,209,88,0.08);font-size:12px;color:var(--teal);line-height:1.6">
+        💡 <strong>核心公式：</strong>敏感 → 洞察（而非内耗）→ 情绪 → 作品（而非压抑）→ 审美 → 收入（而非消费）→ 表达 → 资产（而非消耗）
+      </div>
+    </div>
+  </div>
+
+  <!-- 南北交点对比进度条 -->
+  <div class="card card-pur" style="cursor:default">
+    <div class="card-title">🧭 南北交点：灵魂进化进度</div>
+    <div class="stat-row"><span class="stat-label" style="color:var(--pink)">南交♐7宫</span><div class="stat-track"><div class="stat-fill" style="width:85%;background:rgba(255,55,95,0.5)"></div></div><span class="stat-val" style="color:var(--pink)">旧85%</span></div>
+    <p class="card-text" style="font-size:11px;margin-top:2px">过度关注关系 · 被强势的人影响 · 把主导权交出去</p>
+    <div class="stat-row" style="margin-top:14px"><span class="stat-label" style="color:var(--teal)">北交♊1宫</span><div class="stat-track"><div class="stat-fill" style="width:35%;background:rgba(48,209,88,0.5)"></div></div><span class="stat-val" style="color:var(--teal)">新35%</span></div>
+    <p class="card-text" style="font-size:11px;margin-top:2px">建立自我的声音和身份 · 独立表达 · 不依附</p>
+    <p class="card-text" style="font-size:12px;margin-top:12px;text-align:center">
+      💡 目标：逐步将"新"进度条从 <strong>35% → 70%+</strong>。<br>每一次敢于表达 = +1%。每一次收回主导权 = +2%。
+    </p>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════ -->
+<!-- 星盘总结 · 可视化仪表盘 -->
+<!-- ═══════════════════════════════════════ -->
+<section class="section" id="summary">
+  <div class="sl">Final Synthesis</div>
+  <div class="st">星盘总结</div>
+  <p class="sd">一句话：这个人不是适合被长期埋在系统里做普通执行的人——他是天生的表达者、审美者和内容创作者。</p>
+
+  <!-- 总结记分板 -->
+  <div class="cw">
+    <div style="font-size:13px;font-weight:600;margin-bottom:14px;color:var(--t2)">📊 人生六大维度总结</div>
+    <div class="sb-grid" id="summaryBoard"></div>
+  </div>
+
+  <!-- 总结仪表盘 -->
+  <div class="cw">
+    <div style="font-size:13px;font-weight:600;margin-bottom:8px;color:var(--t2)">🎯 核心指标总览</div>
+    <canvas id="summaryRadar"></canvas>
+  </div>
+
+  <!-- 优势和短板 -->
+  <div class="ba-wrap">
+    <div class="ba-card" style="border-left:3px solid var(--pur);text-align:left">
+      <div class="ba-label" style="color:var(--pur)">🌟 最大优势</div>
+      <div class="ba-text" style="font-size:13px">能把情绪、审美、故事和信息整合成有商业价值的内容。</div>
+    </div>
+    <div class="ba-card" style="border-left:3px solid var(--ora);text-align:left">
+      <div class="ba-label" style="color:var(--ora)">⚠️ 最大短板</div>
+      <div class="ba-text" style="font-size:13px">太容易被关系、评价和安全感牵动，用内耗消耗创作力。</div>
+    </div>
+  </div>
+
+  <!-- 最适合/最不适合 -->
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">
+    <div class="card card-teal" style="text-align:center;cursor:default">
+      <div class="card-title" style="font-size:14px;justify-content:center">✅ 最适合</div>
+      <p class="card-text" style="font-size:11px;line-height:1.7">
+        表达型创作 · 审美型商业 · 个人品牌 · 内容策划 · 影像叙事 · 轻资产创业 · 社群运营 · AI+内容
+      </p>
+    </div>
+    <div class="card card-pink" style="text-align:center;cursor:default">
+      <div class="card-title" style="font-size:14px;justify-content:center">❌ 最不适合</div>
+      <p class="card-text" style="font-size:11px;line-height:1.7">
+        纯执行岗位 · 低自由度工作 · 高风险投机 · 关系边界不清 · 长期幕后 · 暧昧不确定 · 重资产冒险
+      </p>
+    </div>
+  </div>
+
+  <!-- 总结表 -->
+  <div class="tbl">
+    <table class="styled-table">
+      <thead><tr><th>维度</th><th>结论</th><th>关键依据</th></tr></thead>
+      <tbody>
+        <tr><td>核心性格</td><td>敏感、稳定、重感受，有表达欲</td><td>太阳巨蟹 3宫，上升金牛</td></tr>
+        <tr><td>情绪模式</td><td>关系反馈会影响情绪</td><td>月亮天秤 5宫，七宫冥王星</td></tr>
+        <tr><td>爱情模式</td><td>浪漫但现实，需要稳定承诺</td><td>月亮 5宫，金星处女 4宫</td></tr>
+        <tr><td>事业方向</td><td>内容、审美、传播、互联网、新媒体</td><td>MC 水瓶，天王星 10宫</td></tr>
+        <tr><td>赚钱方式</td><td>靠嘴、脑、审美、作品赚钱</td><td>二宫双子，木星 3宫</td></tr>
+        <tr><td>人生课题</td><td>从关系依附走向自我表达</td><td>北交点双子 1宫，土星 1宫</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="insight" style="background:linear-gradient(135deg,rgba(255,214,10,0.08),rgba(255,159,10,0.08));border-color:rgba(255,214,10,0.18)">
+    <p>"关键突破点不是能力，而是自我表达、关系边界和公开被看见的勇气。"</p>
+  </div>
+</section>
+
+<div class="footer">
+  <span class="footer-emoji">🔮</span>
+  <p>本命星盘分析 · 2002.07.16 · 广东佛山顺德</p>
+  <p style="margin-top:4px">上升金牛 29°30′ · MC 水瓶</p>
+  <p style="margin-top:8px;font-size:10px;color:var(--t3)">仅供个人参考</p>
+</div>
+
+</div><!-- /container -->
+
+<script>
+// ═══════════════════════════════════════
+// 0. DATA
+// ═══════════════════════════════════════
+const PLANETS=[
+  {id:'sun',emoji:'☀️',name:'太阳',sign:'巨蟹',sh:'♋',house:3,lon:113,color:'#ffd60a',r:5.5,retro:false,dign:'入庙',text:'太阳代表人格核心。太阳巨蟹 3 宫意味着这个人本质上是一个敏感型表达者——他的自我认同与情绪、记忆、沟通和表达深度绑定。3 宫让他的巨蟹能量直接通向语言、写作、内容创作领域。',key:'人格核心 = 情感型表达者。越表达，越成为自己。'},
+  {id:'moon',emoji:'🌙',name:'月亮',sign:'天秤',sh:'♎',house:5,lon:193,color:'#2997ff',r:4.5,retro:false,dign:'落陷',text:'月亮代表情绪需求和潜意识。月亮天秤 5 宫让他需要恋爱感、互动感、被喜欢、被欣赏。情绪依赖互动反馈和关系平衡。5 宫让他的情绪需求与创造力、浪漫、自我表达密切相关。',key:'情绪安全感 = 被喜欢 + 被公平对待 + 被认真看见。'},
+  {id:'mercury',emoji:'💫',name:'水星',sign:'巨蟹',sh:'♋',house:2,lon:105,color:'#30d158',r:3.8,retro:false,dign:'中性',text:'水星代表思维和沟通方式。水星巨蟹 2 宫让他的思维方式偏感性、记忆导向。2 宫位置暗示他可以通过语言、文字、信息处理直接创造经济价值。',key:'思维 = 感受 + 记忆 + 故事。变现方式 = 把思维变成内容。'},
+  {id:'venus',emoji:'💖',name:'金星',sign:'处女',sh:'♍',house:4,lon:157,color:'#ff375f',r:4,retro:false,dign:'落陷',text:'金星代表爱与审美。金星处女 4 宫让他在审美和生活细节上比较挑剔。4 宫把金星能量引向家庭——他需要的是一个让他安心的家和一个细节上靠谱的伴侣。',key:'爱情 = 外在浪漫 + 内在现实。伴侣 = 能一起过日子的人。'},
+  {id:'mars',emoji:'🔥',name:'火星',sign:'狮子',sh:'♌',house:3,lon:128,color:'#ff9f0a',r:3.5,retro:false,dign:'中性',text:'火星代表行动力和欲望。火星狮子 3 宫意味着他的行动力通过表达、创作、讲话来释放。被认可时很有表现力，被否定时容易缩回去。适合靠创作、讲话、内容输出推动事情。',key:'行动力 = 爆发型。燃料 = 被认可 + 有兴趣 + 被看见。'},
+  {id:'jupiter',emoji:'🪐',name:'木星',sign:'巨蟹',sh:'♋',house:3,lon:115,color:'#af52de',r:5,retro:false,dign:'擢升',text:'木星代表幸运和扩张。木星巨蟹 3 宫强烈放大了他通过情绪化表达、故事讲述和内容传播获得成长和机遇的能力。"越表达越幸运"的典型配置。',key:'幸运密码 = 表达 + 故事 + 情绪共鸣 + 内容传播。这是可以放大一生的引擎。'},
+  {id:'saturn',emoji:'⏳',name:'土星',sign:'双子',sh:'♊',house:1,lon:70,color:'#8e8e93',r:3.2,retro:false,dign:'中性',text:'土星代表限制和成长课题。土星双子 1 宫前期容易不够自信、怕说错、怕被评价。但后期会变得专业、成熟、稳定。核心功课：从"怕表达不够好"变成"我的声音本身就有价值"。',key:'土星给的延迟回报最稳。30岁后自信心和专业感会显著提升。'},
+  {id:'uranus',emoji:'⚡',name:'天王星',sign:'水瓶',sh:'♒',house:10,lon:313,color:'#5ac8fa',r:3,retro:true,dign:'入庙',text:'天王星代表变革。天王星水瓶 10 宫（逆行）意味着事业必然不走寻常路。不适合一眼望到头的职业。10 宫 + 入庙水瓶 = 天生适合互联网、非传统职业、创新领域。',key:'事业 = 不走寻常路。突破时机 = 内在觉醒 > 外部机遇。'},
+  {id:'neptune',emoji:'🌊',name:'海王星',sign:'水瓶',sh:'♒',house:9,lon:307,color:'#bf5af2',r:2.8,retro:true,dign:'中性',text:'海王星代表梦想。海王星水瓶 9 宫（逆行）让他容易对远方、理想型、精神共鸣有美好想象。需要学会在现实与理想间找到平衡。',key:'警惕：把理想投射到不适合的人上。转化：把理想变成作品。'},
+  {id:'pluto',emoji:'🖤',name:'冥王星',sign:'射手',sh:'♐',house:7,lon:250,color:'#ff375f',r:3.2,retro:true,dign:'中性',text:'冥王星代表深层转化。冥王星射手 7 宫（逆行）意味着亲密关系是他人生最重要的试炼场。每一段深刻的关系都会让他重生——但需要学会不把"爱"等同于"控制"或"考验"。',key:'关系 = 试炼场。每一段深刻关系都是一次灵魂升级。'},
+  {id:'nnode',emoji:'🧭',name:'北交点',sign:'双子',sh:'♊',house:1,lon:68,color:'#30d158',r:2.5,retro:true,dign:'—',text:'北交点代表灵魂进化方向。北交点双子 1 宫（逆行）是他今生最重要的成长方向：建立自己的声音、身份和独立判断力。越敢表达自己，人生越顺。',key:'今生使命：从关系依附 → 自我表达。从听别人的 → 说出自己的。'},
+  {id:'rising',emoji:'🌟',name:'上升点',sign:'金牛',sh:'♉',house:1,lon:59,color:'#ffd60a',r:4.5,retro:false,dign:'—',text:'上升点代表外在气质。上升金牛 29°30′ 极近双子，外在稳定干净耐看。29°30′在金牛最末度——人生课题天然包含"从金牛的稳定固守走向双子的灵活表达"。',key:'第一印象 = 安静 + 稳定 + 有质感。内在 = 丰富 + 敏感 + 表达欲强。'},
+];
+
+const HOUSES=[
+  {num:1,sign:'金牛',sh:'♉',ruler:'金星',planets:'土星·北交点·上升点',kw:'自我·身份·第一印象',text:'上升金牛29°30′——极近双子，外在沉稳有审美，灵魂深处渴望表达。土星落此让人前期谨慎克制，后期越成熟越有威信。北交点在此——今生核心课题就是建立独立自我。'},
+  {num:2,sign:'双子',sh:'♊',ruler:'水星',planets:'水星',kw:'金钱·价值·谋生',text:'通过情绪化表达、文字、语言和信息处理赚钱。靠"嘴、脑、审美、信息"变现的天赋配置。'},
+  {num:3,sign:'巨蟹',sh:'♋',ruler:'月亮',planets:'太阳·火星·木星',kw:'沟通·表达·传播',text:'盘中能量最集中的宫位！太阳+木星+火星齐聚——"情感型表达者"的核心引擎。沟通即是疗愈，表达就是力量。'},
+  {num:4,sign:'处女',sh:'♍',ruler:'水星',planets:'金星',kw:'家庭·根源·安全感',text:'金星处女落4宫——对家有极高的审美标准。情感安全感与生活细节强绑定。会用心经营自己的家。'},
+  {num:5,sign:'天秤',sh:'♎',ruler:'金星',planets:'月亮',kw:'创意·恋爱·表现欲',text:'月亮天秤落5宫——情绪需求与浪漫、创作、被欣赏深度绑定。在恋爱中重仪式感、审美互动。'},
+  {num:6,sign:'天蝎',sh:'♏',ruler:'冥王/火星',planets:'—',kw:'工作·健康·日常',text:'宫头天蝎——工作态度认真深入。对工作环境敏感，需要有意义的工作而非纯执行。'},
+  {num:7,sign:'天蝎',sh:'♏',ruler:'冥王/火星',planets:'冥王星',kw:'伴侣·合作·一对一',text:'盘中最重要的关系宫位！七宫天蝎+冥王星落此——对亲密关系有极高深度要求。每一段深刻的关系都会带来蜕变。'},
+  {num:8,sign:'射手',sh:'♐',ruler:'木星',planets:'—',kw:'共享资源·转化·深度',text:'投资适合长期视野。亲密关系中的共享议题需要射手式的智慧和大局观来处理。'},
+  {num:9,sign:'摩羯',sh:'♑',ruler:'土星',planets:'海王星',kw:'信仰·旅行·高等教育',text:'海王星落9宫——对远方和精神共鸣有美好想象。需要建立系统化的知识结构而非漫无目的追寻。'},
+  {num:10,sign:'水瓶',sh:'♒',ruler:'天王/土星',planets:'天王星',kw:'事业·社会地位·天命',text:'MC水瓶+天王星入庙10宫——天选的非传统职业路径！不适合一眼望到头的体制内职业。'},
+  {num:11,sign:'双鱼',sh:'♓',ruler:'海王/木星',planets:'福点',kw:'社群·朋友·人脉',text:'适合通过互联网、社群平台放大个人影响。福点在此——通过社群获取幸运和资源。'},
+  {num:12,sign:'白羊',sh:'♈',ruler:'火星',planets:'—',kw:'潜意识·独处·灵性',text:'潜意识中有战士的冲动。在独处时最有创造力。需要定期独处充电。'},
+];
+
+// ═══════════════════════════════════════
+// 1. STARFIELD
+// ═══════════════════════════════════════
+(function(){
+  const c=document.getElementById('starfield'),ctx=c.getContext('2d');let stars=[];
+  function resize(){c.width=window.innerWidth;c.height=document.documentElement.scrollHeight;initStars()}
+  function initStars(){const n=Math.floor((c.width*c.height)/2200);stars=[];for(let i=0;i<n;i++)stars.push({x:Math.random()*c.width,y:Math.random()*c.height,r:Math.random()*1.2+.3,o:Math.random(),s:Math.random()*.008+.002})}
+  function draw(){ctx.clearRect(0,0,c.width,c.height);stars.forEach(s=>{s.o+=s.s;if(s.o>1||s.o<0)s.s*=-1;ctx.beginPath();ctx.arc(s.x,s.y,s.r,0,Math.PI*2);ctx.fillStyle=`rgba(255,255,255,${.15+s.o*.35})`;ctx.fill()});requestAnimationFrame(draw)}
+  resize();draw();window.addEventListener('resize',resize);
+  let t;window.addEventListener('scroll',()=>{clearTimeout(t);t=setTimeout(()=>{c.height=document.documentElement.scrollHeight},200)});
+})();
+
+// ═══════════════════════════════════════
+// 2. NAVIGATION
+// ═══════════════════════════════════════
+document.querySelectorAll('.nav-chip').forEach(ch=>{
+  ch.addEventListener('click',()=>{
+    document.querySelectorAll('.nav-chip').forEach(c=>c.classList.remove('active'));
+    ch.classList.add('active');
+    const t=document.getElementById(ch.dataset.target);
+    if(t)t.scrollIntoView({behavior:'smooth',block:'start'});
+  });
+});
+const so=new IntersectionObserver((es)=>{es.forEach(e=>{if(e.isIntersecting){document.querySelectorAll('.nav-chip').forEach(c=>c.classList.toggle('active',c.dataset.target===e.target.id))}})},{threshold:.3});
+['hero','planets','personality','love','career','wealth','life','summary'].forEach(id=>{const el=document.getElementById(id);if(el)so.observe(el)});
+
+// ═══════════════════════════════════════
+// 3. TAB SWITCHING
+// ═══════════════════════════════════════
+document.querySelectorAll('#planetTabBar .nav-chip').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    document.querySelectorAll('#planetTabBar .nav-chip').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    document.querySelectorAll('.tp').forEach(p=>p.style.display='none');
+    document.getElementById(btn.dataset.tab).style.display='block';
+  });
+});
+
+// ═══════════════════════════════════════
+// 4. PLANET GRID + DETAIL
+// ═══════════════════════════════════════
+(function(){
+  const grid=document.getElementById('planetGrid');
+  PLANETS.forEach(p=>{
+    const card=document.createElement('div');
+    card.className='planet-card';card.dataset.planet=p.id;
+    card.style.cssText='background:var(--card);border:1px solid var(--gb);border-radius:var(--rmd);padding:14px 10px;text-align:center;cursor:pointer;transition:all .3s';
+    card.innerHTML=`<span style="font-size:24px;display:block;margin-bottom:3px">${p.emoji}</span><div style="font-size:11px;font-weight:600;color:var(--t1)">${p.name}</div><div style="font-size:10px;color:var(--blu)">${p.sign}${p.sh}</div><div style="font-size:9px;color:var(--t3)">第${p.house}宫${p.retro?' ℞':''}</div>`;
+    card.addEventListener('click',()=>{
+      const was=card.classList.contains('selected');
+      document.querySelectorAll('.planet-card').forEach(c=>c.classList.remove('selected'));
+      const detail=document.getElementById('planetDetail');
+      if(was){detail.style.display='none'}else{
+        card.classList.add('selected');
+        detail.style.display='block';
+        document.getElementById('pdName').textContent=`${p.emoji} ${p.name} · ${p.sign}${p.sh} · 第${p.house}宫${p.retro?' ℞':''}`;
+        document.getElementById('pdSub').textContent=`尊贵性：${p.dign} | 关联相位：${p.id==='sun'?'日木合相·日水合相·日冥对分':p.id==='moon'?'月冥四分·月火六分':p.id==='venus'?'金土三合·金天三合':p.id==='saturn'?'土星合北交点·金土三合':p.id==='pluto'?'月冥四分·日冥对分·木冥对分':'—'}`;
+        document.getElementById('pdInfo').innerHTML=`${p.text}<br><br>🔑 <strong>${p.key}</strong>`;
+        setTimeout(()=>detail.scrollIntoView({behavior:'smooth',block:'nearest'}),100);
+      }
+    });
+    grid.appendChild(card);
+  });
+})();
+
+// ═══════════════════════════════════════
+// 5. HOUSE GRID
+// ═══════════════════════════════════════
+(function(){
+  const grid=document.getElementById('houseGrid');
+  HOUSES.forEach(h=>{
+    const hasP=h.planets!=='—'&&h.planets!=='福点';
+    const card=document.createElement('div');
+    card.style.cssText=`background:var(--card);border:1px solid var(--gb);border-radius:var(--rmd);padding:14px 12px;cursor:pointer;transition:all .3s;${hasP?'border-left:3px solid var(--gold)':''}`;
+    card.innerHTML=`<div style="font-size:22px;font-weight:700;color:var(--t2);opacity:.5;float:right">${h.num}</div><div style="font-size:13px;font-weight:600;color:var(--t1)">${h.sh} ${h.sign}</div><div style="font-size:10px;color:var(--t3)">宫主：${h.ruler} | ${h.kw}</div>${hasP?`<div style="font-size:10px;color:var(--gold);margin-top:4px">🪐 ${h.planets}</div>`:'<div style="font-size:9px;color:var(--t3)">空宫</div>'}<div style="display:none;margin-top:10px;padding-top:10px;border-top:1px solid rgba(255,255,255,0.06);font-size:12px;color:var(--t2);line-height:1.65">${h.text}</div>`;
+    card.addEventListener('click',()=>{
+      const d=card.querySelector('div:last-child');
+      const was=d.style.display==='block';
+      document.querySelectorAll('#houseGrid > div > div:last-child').forEach(x=>x.style.display='none');
+      if(!was){d.style.display='block';card.scrollIntoView({behavior:'smooth',block:'nearest'})}
+    });
+    grid.appendChild(card);
+  });
+})();
+
+// ═══════════════════════════════════════
+// 6. ASPECT GRID
+// ═══════════════════════════════════════
+(function(){
+  const aspects=[
+    {p1:'太阳',p2:'木星',type:'合相 ☌',orb:2,color:'#ffd60a',cls:'gold',text:'人格与幸运的完美融合——"越表达越幸运"的核心配置。天生的故事讲述者。'},
+    {p1:'太阳',p2:'水星',type:'合相 ☌',orb:8,color:'#ffd60a',cls:'gold',text:'心智与自我的合一——思维风格与人格核心高度一致，内外不分裂。'},
+    {p1:'土星',p2:'北交点',type:'合相 ☌',orb:2,color:'#ffd60a',cls:'gold',text:'限制即方向——前期"怕表达"本身就是今生要突破的核心课题。'},
+    {p1:'金星',p2:'土星',type:'三分 △',orb:3,color:'#30d158',cls:'teal',text:'审美与责任感的完美平衡——爱情不走极端，财务不冒险。'},
+    {p1:'金星',p2:'天王星',type:'三分 △',orb:6,color:'#30d158',cls:'teal',text:'审美与创新的结合——适合把经典审美与前沿科技融合。'},
+    {p1:'水星',p2:'北交点',type:'三分 △',orb:7,color:'#30d158',cls:'teal',text:'表达力与人生方向的天然助力——写作、讲话是灵魂进化的工具。'},
+    {p1:'火星',p2:'天王星',type:'三分 △',orb:5,color:'#30d158',cls:'teal',text:'表达行动力与事业创新的共振——敢于在公众面前"做自己"。'},
+    {p1:'月亮',p2:'火星',type:'六分 ⚹',orb:5,color:'#2997ff',cls:'blu',text:'情绪驱动创造力——被欣赏时情绪和行动正循环。'},
+    {p1:'月亮',p2:'冥王星',type:'四分 □',orb:3,color:'#ff375f',cls:'pink',text:'盘中最大张力——渴望亲密又害怕失控，亲密关系是成长最快的领域。'},
+    {p1:'太阳',p2:'冥王星',type:'对分 ☍',orb:4,color:'#ff9f0a',cls:'ora',text:'自我意志 vs 深度关系的拉扯——需要在"做自己"和"经营关系"之间找平衡。'},
+    {p1:'木星',p2:'冥王星',type:'对分 ☍',orb:2,color:'#ff9f0a',cls:'ora',text:'幸运扩张 vs 关系控制——需要在"向外走"和"向内走"之间找到节奏。'},
+    {p1:'太阳',p2:'火星',type:'合相 ☌',orb:15,color:'#ffd60a',cls:'gold',text:'宽泛合相。表达欲与行动力的联盟——被认可时表达极具爆发力。'},
+  ];
+  const grid=document.getElementById('aspectGrid');
+  aspects.forEach(a=>{
+    const div=document.createElement('div');
+    div.style.cssText=`background:var(--card);border:1px solid var(--gb);border-radius:var(--rsm);padding:12px;font-size:11px;line-height:1.5;border-left:3px solid ${a.color}`;
+    div.innerHTML=`<div style="font-size:10px;font-weight:600;color:${a.color};letter-spacing:.04em">${a.type} · 容许度${a.orb}°</div><div style="font-size:12px;font-weight:500;color:var(--t1)">${a.p1} ⇄ ${a.p2}</div><div style="font-size:10px;color:var(--t2);margin-top:4px">${a.text}</div>`;
+    grid.appendChild(div);
+  });
+})();
+
+// ═══════════════════════════════════════
+// 7. SCENARIO FLIP CARDS (内外对比)
+// ═══════════════════════════════════════
+(function(){
+  const scenarios=[
+    {tag:'外表 vs 内心',color:'var(--teal)',front:'<span style="color:var(--teal)">外表："这个人好安静"</span>',frontText:'聚会中坐在角落，不主动搭话，表情淡淡的。别人觉得他高冷、有距离感。',back:'<span style="color:var(--pur)">内心："我在想很多"</span>',backText:'他正在观察每个人说话的方式、表情、语气。已经在心里写了三个人的性格侧写。他不是不想说话，而是在等一个值得开口的话题。'},
+    {tag:'坚强 vs 敏感',color:'var(--teal)',front:'<span style="color:var(--teal)">外表："没事，我不在意"</span>',frontText:'被人无意中否定了一句，他笑笑说"没关系"。看起来完全不受影响。',back:'<span style="color:var(--pink)">内心："那句话我会想很久"</span>',backText:'接下来三天，那句话会在他的脑子里反复播放。他会分析：对方为什么这么说？是我不够好？还是对方今天心情不好？'},
+    {tag:'浪漫 vs 现实',color:'var(--pink)',front:'<span style="color:var(--pink)">恋爱中："太甜了"</span>',frontText:'会精心准备约会、记住每一个纪念日、写很长的消息、在意仪式感和氛围感。',back:'<span style="color:var(--teal)">决定时："这个人靠谱吗"</span>',backText:'真正决定是否长期走下去的标准，不是浪漫程度，而是：这个人是否说到做到？是否在细节上可靠？是否能一起经营生活？'},
+  ];
+  const container=document.getElementById('scenarioCards');
+  scenarios.forEach((s,i)=>{
+    const wrap=document.createElement('div');
+    wrap.className='scenario-card';
+    wrap.style.cssText=`perspective:800px;height:200px;margin-bottom:16px;cursor:pointer`;
+    wrap.innerHTML=`
+      <div class="scenario-inner" style="position:relative;width:100%;height:100%;transition:transform .6s cubic-bezier(.25,.1,.25,1);transform-style:preserve-3d">
+        <div style="position:absolute;width:100%;height:100%;backface-visibility:hidden;border-radius:var(--rlg);padding:20px 24px;display:flex;flex-direction:column;justify-content:center;background:var(--card);border:1px solid var(--gb)">
+          <div style="font-size:10px;font-weight:600;letter-spacing:.06em;color:${s.color};margin-bottom:8px;text-transform:uppercase">${s.tag}</div>
+          <div style="font-size:16px;font-weight:600;margin-bottom:6px">${s.front}</div>
+          <div style="font-size:13px;color:var(--t2);line-height:1.6">${s.frontText}</div>
+          <div style="font-size:10px;color:var(--t3);margin-top:10px">👆 点击翻转看内在</div>
+        </div>
+        <div style="position:absolute;width:100%;height:100%;backface-visibility:hidden;border-radius:var(--rlg);padding:20px 24px;display:flex;flex-direction:column;justify-content:center;background:rgba(38,38,48,0.85);border:1px solid var(--gb);transform:rotateY(180deg)">
+          <div style="font-size:10px;font-weight:600;letter-spacing:.06em;color:${s.color};margin-bottom:8px;text-transform:uppercase">${s.tag}</div>
+          <div style="font-size:16px;font-weight:600;margin-bottom:6px">${s.back}</div>
+          <div style="font-size:13px;color:var(--t2);line-height:1.6">${s.backText}</div>
+          <div style="font-size:10px;color:var(--t3);margin-top:10px">👆 点击翻回看外在</div>
+        </div>
+      </div>`;
+    wrap.addEventListener('click',()=>{wrap.classList.toggle('flipped')});
+    container.appendChild(wrap);
+  });
+})();
+
+// ═══════════════════════════════════════
+// 8. LOVE TENDENCY GRID
+// ═══════════════════════════════════════
+(function(){
+  const tendencies=[
+    {name:'控制',icon:'🎛️',level:'中高',pct:72,color:'var(--pink)',barColor:'#ff375f',text:'不一定明着控制——他不会说"你必须怎样"。但会反复确认对方的态度："你今天怎么话这么少？""刚才那条消息你是不是不太高兴？"——这是一种通过"反复确认"来实现的软性控制。根源：冥王星7宫对关系深度的执念。',ex:'💡 场景：对方两小时没回消息。他不会发"你在哪？"而是发一条看似随意但精心设计的问题——目的不是聊天，而是检测对方是否还在意。'},
+    {name:'依赖',icon:'🫂',level:'中高',pct:70,color:'var(--pur)',barColor:'#af52de',text:'情绪容易受亲密关系影响。对方开心他就开心，对方冷淡他就低落。不是物质依赖，是<strong>情绪依赖</strong>。他的情绪天气预报，很大程度由伴侣的态度决定。根源：月亮天秤5宫——情绪安全感绑定在关系反馈上。',ex:'💡 场景：今天本来心情很好，做了很多计划。但伴侣视频通话时语气有点冷淡——接下来两个小时他什么都没做，只是在想"怎么了"。'},
+    {name:'逃避',icon:'🏃',level:'中',pct:55,color:'var(--blu)',barColor:'#2997ff',text:'受伤后不会正面冲突，而是冷处理或缩回去。他不是不想解决问题，而是<strong>害怕冲突会让关系更糟</strong>。沉默是他的自我保护机制——但对方可能误读为"他不在乎"。根源：土星1宫怕说错话+巨蟹式防御退缩。',ex:'💡 场景：和伴侣有分歧后，他说"让我想想"。然后两天不怎么主动联系。不是冷战，是他需要时间消化情绪、组织语言——但这两天的沉默本身就可能造成误解。'},
+    {name:'冷淡',icon:'🧊',level:'表面中高',pct:68,color:'var(--t3)',barColor:'#8e8e93',text:'外冷内热——这是上升金牛+土星1宫的经典配置。外表看起来永远淡定，但内心可能已经翻江倒海。失望后不是大哭大闹而是<strong>明显抽离</strong>——从"每天找你"变成"你找我我就回"。这种冷是保护自己不再受伤。',ex:'💡 场景：被伴侣放了鸽子。他不会发火，只是说"没事，下次吧"。但接下来一周你会发现他回复的速度从30秒变成了3小时。'},
+    {name:'反复',icon:'🔁',level:'中高',pct:74,color:'var(--ora)',barColor:'#ff9f0a',text:'关系不确定时容易拉扯。不是他喜欢反复——<strong>他讨厌不确定</strong>。但当对方给出的信号不够清晰时，他会在"靠近"和"撤退"之间反复切换。根源：月亮天秤追求关系平衡+七宫天蝎需要深度确认。',ex:'💡 场景：对方有时很热情有时很冷淡。他不是直接问"你到底喜不喜欢我？"，而是今天主动约你，明天又突然变得客气疏离——他在用行为试探你的态度。'},
+    {name:'理想化',icon:'✨',level:'中',pct:58,color:'var(--gold)',barColor:'#ffd60a',text:'会把"被认真爱"想得很美——不是坏事，这是他创作力和浪漫感的来源。但现实中的金星处女会挑细节——对方有一点点不符合他的期待，就会引发失望。根源：海王星9宫对"完美关系"的想象+金星处女对细节的挑剔。',ex:'💡 场景：他想象中完美的约会：有氛围的餐厅、对方记得他爱吃的菜、聊到深夜。现实中对方迟到了15分钟——这个细节足够让他在心里把这场约会从"完美"降到"还行"。'},
+  ];
+  const grid=document.getElementById('loveTendGrid');
+  tendencies.forEach(t=>{
+    const card=document.createElement('div');
+    card.style.cssText=`background:var(--card);border:1px solid var(--gb);border-radius:var(--rmd);padding:16px 10px;text-align:center;cursor:pointer;transition:all .3s`;
+    card.innerHTML=`
+      <span style="font-size:24px;display:block;margin-bottom:4px">${t.icon}</span>
+      <div style="font-size:12px;font-weight:600;color:var(--t1)">${t.name}</div>
+      <div style="font-size:20px;font-weight:700;margin:4px 0;color:${t.color}">${t.level}</div>
+      <div style="height:3px;border-radius:100px;margin:0 auto;width:60%;background:${t.barColor};opacity:.6"></div>
+      <div style="display:none;margin-top:12px;padding-top:12px;border-top:1px solid rgba(255,255,255,0.06);font-size:11px;color:var(--t2);line-height:1.6;text-align:left">${t.text}<br><br><span style="color:${t.color}">${t.ex}</span></div>`;
+    card.querySelector('.expander')?.remove();
+    card.addEventListener('click',()=>{
+      const d=card.querySelector('div:last-child');
+      const was=d.style.display==='block';
+      document.querySelectorAll('#loveTendGrid > div > div:last-child').forEach(x=>x.style.display='none');
+      document.querySelectorAll('#loveTendGrid > div').forEach(x=>x.style.borderColor='');
+      card.style.borderColor='rgba(255,255,255,0.25)';
+      if(!was){d.style.display='block'}
+    });
+    grid.appendChild(card);
+  });
+})();
+
+// ═══════════════════════════════════════
+// 9. CAREER TIMELINE
+// ═══════════════════════════════════════
+(function(){
+  const phases=[
+    {phase:'阶段一',title:'前期：积累期（~20-27岁）',desc:'容易犹豫、自我怀疑、定位不稳定。土星1宫让他觉得自己"还不够好"，但这也迫使他不断打磨技能。建议：不要裸辞，在平台上积累作品。找一个审美要求高、有表达空间的岗位先建立基础。'},
+    {phase:'阶段二',title:'中期：突破期（~27-35岁）',desc:'通过作品和经验积累形成专业标签。天王星10宫可能带来1-2次事业方向切换。此时应开始建立个人内容输出系统：公众号/视频号/作品集。从"执行者"升级为"有个人风格的创作者"。'},
+    {phase:'阶段三',title:'后期：品牌期（~35岁+）',desc:'个人品牌、内容产品、社群、顾问型项目。MC水瓶+天王星10宫的跳跃式发展在这一阶段集中体现。前期积累的审美标签和表达系统在这一阶段兑现。可以从副业过渡到独立发展。'},
+    {phase:'阶段四',title:'突破关键',desc:'每一次事业跳跃都来自——他不再害怕"被人看见"。土星1宫的自我压制在一次次公开表达中被消解。北交点1宫的课题完成得越好，事业越顺。'},
+    {phase:'阶段五',title:'长期目标',desc:'成为一个有审美标签、有个人IP、有内容资产和社群影响力的独立创作者或创意型商业主理人。不是"帮别人做内容"，而是"别人来找你做内容，因为你做的和别人不一样"。'},
+  ];
+  const tl=document.getElementById('careerTimeline');
+  phases.forEach((p,i)=>{
+    const item=document.createElement('div');
+    item.className='tl-item'+(i===0?' active':'');
+    item.innerHTML=`<div class="tl-dot"></div><div class="tl-phase">${p.phase}</div><div class="tl-title">${p.title}</div><div class="tl-desc">${p.desc}</div>`;
+    item.addEventListener('click',()=>{document.querySelectorAll('#careerTimeline .tl-item').forEach(x=>x.classList.remove('active'));item.classList.add('active')});
+    tl.appendChild(item);
+  });
+})();
+
+// ═══════════════════════════════════════
+// 10. WEALTH TIMELINE + SCOREBOARD
+// ═══════════════════════════════════════
+(function(){
+  const wPhases=[
+    {phase:'第一步',title:'稳定现金流',desc:'先有一份稳定收入。不要一开始就裸辞创业——土星1宫需要结构支撑。利用业余时间做内容积累。'},
+    {phase:'第二步',title:'副业作品积累',desc:'用内容、摄影、策划方向接项目或运营账号。作品集是变现的核心资产。建立自己的审美标签和风格。'},
+    {phase:'第三步',title:'个人品牌',desc:'当作品积累到足够多、审美标签足够清晰时，开始建立个人IP。内容、审美和表达形成商业闭环。'},
+    {phase:'第四步',title:'产品化',desc:'把能力变成可复制的产品：课程、社群、咨询、模板、工具、方法论。不再是"卖时间"，而是"卖方法论和审美"。'},
+    {phase:'第五步',title:'轻资产创业',desc:'建立团队或独立运营，内容型/审美型/社群型创业。轻资产、低风险、可持续。'},
+  ];
+  const tl=document.getElementById('wealthTimeline');
+  wPhases.forEach((p,i)=>{
+    const item=document.createElement('div');
+    item.className='tl-item'+(i===0?' active':'');
+    item.innerHTML=`<div class="tl-dot"></div><div class="tl-phase">${p.phase}</div><div class="tl-title">${p.title}</div><div class="tl-desc">${p.desc}</div>`;
+    item.addEventListener('click',()=>{document.querySelectorAll('#wealthTimeline .tl-item').forEach(x=>x.classList.remove('active'));item.classList.add('active')});
+    tl.appendChild(item);
+  });
+
+  // Scoreboard
+  const scores=[
+    {icon:'📈',name:'投资',val:'中',color:'var(--ora)',text:'可以学，不冲动重仓'},
+    {icon:'🤝',name:'合作',val:'中高',color:'var(--blu)',text:'有资源机会，合同必须清楚'},
+    {icon:'🚀',name:'创业',val:'中高',color:'var(--teal)',text:'轻资产、内容型、审美型'},
+    {icon:'💼',name:'副业',val:'高',color:'var(--gold)',text:'最适合从副业做起'},
+    {icon:'⭐',name:'个人品牌',val:'高',color:'var(--gold)',text:'最值得长期发展'},
+    {icon:'🎲',name:'高风险投机',val:'低',color:'var(--pink)',text:'容易因情绪判断失误'},
+    {icon:'👥',name:'社群变现',val:'高',color:'var(--teal)',text:'信任和内容沉淀赚钱'},
+    {icon:'📚',name:'课程/咨询',val:'中高',color:'var(--blu)',text:'需先建立案例和方法论'},
+  ];
+  const sb=document.getElementById('wealthScoreboard');
+  scores.forEach(s=>{
+    const card=document.createElement('div');
+    card.style.cssText=`background:var(--card);border:1px solid var(--gb);border-radius:var(--rmd);padding:14px 10px;text-align:center`;
+    card.innerHTML=`<span style="font-size:22px;display:block;margin-bottom:4px">${s.icon}</span><div style="font-size:11px;color:var(--t3)">${s.name}</div><div style="font-size:20px;font-weight:700;color:${s.color};margin:4px 0">${s.val}</div><div style="font-size:10px;color:var(--t2)">${s.text}</div>`;
+    sb.appendChild(card);
+  });
+})();
+
+// ═══════════════════════════════════════
+// 11. SUMMARY SCOREBOARD
+// ═══════════════════════════════════════
+(function(){
+  const board=[
+    {icon:'🧠',name:'共情力',val:'92',color:'var(--pur)'},
+    {icon:'🎨',name:'审美力',val:'88',color:'var(--blu)'},
+    {icon:'💬',name:'表达力',val:'85',color:'var(--teal)'},
+    {icon:'⚡',name:'行动力',val:'62',color:'var(--ora)'},
+    {icon:'🛡️',name:'安全感',val:'38',color:'var(--pink)'},
+    {icon:'💰',name:'商业力',val:'78',color:'var(--gold)'},
+  ];
+  const sb=document.getElementById('summaryBoard');
+  board.forEach(b=>{
+    const card=document.createElement('div');
+    card.style.cssText=`background:var(--card);border:1px solid var(--gb);border-radius:var(--rmd);padding:14px 10px;text-align:center`;
+    card.innerHTML=`<span style="font-size:20px;display:block;margin-bottom:2px">${b.icon}</span><div style="font-size:10px;color:var(--t3)">${b.name}</div><div style="font-size:22px;font-weight:700;color:${b.color};margin:2px 0">${b.val}</div><div style="font-size:9px;color:var(--t3)">/100</div>`;
+    sb.appendChild(card);
+  });
+})();
+
+// ═══════════════════════════════════════
+// 12. CHARTS (Chart.js)
+// ═══════════════════════════════════════
+const CF={family:"-apple-system,'PingFang SC',sans-serif"};
+
+// Aspect Doughnut
+new Chart(document.getElementById('aspectChart'),{type:'doughnut',data:{labels:['合相','三分相','六分相','四分相','对分相'],datasets:[{data:[4,4,1,1,2],backgroundColor:['rgba(255,214,10,0.7)','rgba(48,209,88,0.7)','rgba(41,151,255,0.7)','rgba(255,55,95,0.7)','rgba(255,159,10,0.7)'],borderColor:'rgba(0,0,0,0.8)',borderWidth:2}]},options:{responsive:true,maintainAspectRatio:true,plugins:{legend:{position:'bottom',labels:{color:'#a1a1a6',font:{size:11,...CF},padding:14,usePointStyle:true}}}}});
+
+// Element Doughnut
+new Chart(document.getElementById('elementChart'),{type:'doughnut',data:{labels:['水元素','风元素','土元素','火元素'],datasets:[{data:[5,3,2,2],backgroundColor:['rgba(41,151,255,0.7)','rgba(255,214,10,0.7)','rgba(48,209,88,0.7)','rgba(255,55,95,0.7)'],borderColor:'rgba(0,0,0,0.8)',borderWidth:2}]},options:{responsive:true,maintainAspectRatio:true,plugins:{legend:{position:'bottom',labels:{color:'#a1a1a6',font:{size:11,...CF},padding:14,usePointStyle:true}}}}});
+
+// Modality
+new Chart(document.getElementById('modalityChart'),{type:'bar',data:{labels:['开创','固定','变动'],datasets:[{data:[3,5,4],backgroundColor:['rgba(255,55,95,0.5)','rgba(48,209,88,0.5)','rgba(255,214,10,0.5)'],borderColor:['rgba(255,55,95,0.8)','rgba(48,209,88,0.8)','rgba(255,214,10,0.8)'],borderWidth:1,borderRadius:6}]},options:{responsive:true,maintainAspectRatio:true,plugins:{legend:{display:false}},scales:{y:{max:8,grid:{color:'rgba(255,255,255,0.05)'},ticks:{color:'#6e6e73',font:{size:10}}},x:{grid:{display:false},ticks:{color:'#a1a1a6',font:{size:10,...CF}}}}}});
+
+// House chart
+new Chart(document.getElementById('houseChart'),{type:'bar',data:{labels:['1','2','3','4','5','6','7','8','9','10','11','12'].map(n=>n+'宫'),datasets:[{data:[3,1,3,1,1,0,1,0,1,1,1,0],backgroundColor:['rgba(255,214,10,0.6)','rgba(48,209,88,0.5)','rgba(255,214,10,0.7)','rgba(175,82,222,0.5)','rgba(41,151,255,0.5)','rgba(255,255,255,0.1)','rgba(255,55,95,0.6)','rgba(255,255,255,0.1)','rgba(175,82,222,0.4)','rgba(41,151,255,0.6)','rgba(175,82,222,0.4)','rgba(255,255,255,0.1)'],borderWidth:1,borderRadius:4}]},options:{responsive:true,maintainAspectRatio:true,plugins:{legend:{display:false}},scales:{y:{max:5,grid:{color:'rgba(255,255,255,0.05)'},ticks:{stepSize:1,color:'#6e6e73',font:{size:10}}},x:{grid:{display:false},ticks:{color:'#a1a1a6',font:{size:9,...CF},maxRotation:45}}}}});
+
+// Radar - Personality
+new Chart(document.getElementById('radarChart'),{type:'radar',data:{labels:['共情力','审美力','表达欲','稳定性','行动力','安全感'],datasets:[{label:'本命配置',data:[92,88,85,78,62,38],backgroundColor:'rgba(175,82,222,0.12)',borderColor:'rgba(175,82,222,0.7)',borderWidth:2,pointBackgroundColor:'rgba(175,82,222,0.9)',pointRadius:4}]},options:{responsive:true,maintainAspectRatio:true,plugins:{legend:{labels:{color:'#a1a1a6',font:{size:11,...CF},padding:16}}},scales:{r:{grid:{color:'rgba(255,255,255,0.06)'},angleLines:{color:'rgba(255,255,255,0.06)'},pointLabels:{color:'#a1a1a6',font:{size:11,...CF}},ticks:{display:false,stepSize:20},suggestedMin:0,suggestedMax:100}}}});
+
+// Love Radar
+new Chart(document.getElementById('loveRadar'),{type:'radar',data:{labels:['稳定需求','深度要求','浪漫感','承诺感','挑剔度','依赖度'],datasets:[{label:'强度',data:[92,88,78,85,75,72],backgroundColor:'rgba(255,55,95,0.10)',borderColor:'rgba(255,55,95,0.7)',borderWidth:2,pointBackgroundColor:'rgba(255,55,95,0.9)',pointRadius:4}]},options:{responsive:true,maintainAspectRatio:true,plugins:{legend:{labels:{color:'#a1a1a6',font:{size:11,...CF},padding:16}}},scales:{r:{grid:{color:'rgba(255,255,255,0.06)'},angleLines:{color:'rgba(255,255,255,0.06)'},pointLabels:{color:'#a1a1a6',font:{size:11,...CF}},ticks:{display:false,stepSize:20},suggestedMin:0,suggestedMax:100}}}});
+
+// Summary Radar
+new Chart(document.getElementById('summaryRadar'),{type:'radar',data:{labels:['共情力','审美力','表达力','行动力','安全感','商业力'],datasets:[{label:'综合指标',data:[92,88,85,62,38,78],backgroundColor:'rgba(255,214,10,0.10)',borderColor:'rgba(255,214,10,0.7)',borderWidth:2,pointBackgroundColor:'rgba(255,214,10,0.9)',pointRadius:4}]},options:{responsive:true,maintainAspectRatio:true,plugins:{legend:{labels:{color:'#a1a1a6',font:{size:11,...CF},padding:16}}},scales:{r:{grid:{color:'rgba(255,255,255,0.06)'},angleLines:{color:'rgba(255,255,255,0.06)'},pointLabels:{color:'#a1a1a6',font:{size:11,...CF}},ticks:{display:false,stepSize:20},suggestedMin:0,suggestedMax:100}}}});
+
+// Horizontal bars
+function hBar(id,labels,data,colors,borders){
+  return new Chart(document.getElementById(id),{type:'bar',data:{labels,datasets:[{data,backgroundColor:colors,borderColor:borders,borderWidth:1,borderRadius:6}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:true,plugins:{legend:{display:false}},scales:{x:{max:100,grid:{color:'rgba(255,255,255,0.05)'},ticks:{color:'#6e6e73',font:{size:10}}},y:{grid:{display:false},ticks:{color:'#a1a1a6',font:{size:11,...CF}}}}}});
+}
+hBar('careerChart',['表达/内容/创作','商业化','艺术审美','个人品牌','资源整合','管理','技术'],[95,82,88,85,72,60,55],['rgba(48,209,88,0.55)','rgba(41,151,255,0.5)','rgba(175,82,222,0.5)','rgba(255,159,10,0.5)','rgba(41,151,255,0.4)','rgba(255,255,255,0.2)','rgba(255,255,255,0.15)'],['rgba(48,209,88,0.8)','rgba(41,151,255,0.8)','rgba(175,82,222,0.8)','rgba(255,159,10,0.8)','rgba(41,151,255,0.7)','rgba(255,255,255,0.3)','rgba(255,255,255,0.2)']);
+hBar('wealthChart',['内容变现','审美变现','咨询策划','社群变现','作品变现','工具变现','信息差变现'],[92,88,82,85,80,72,75],['rgba(255,214,10,0.5)','rgba(255,159,10,0.5)','rgba(255,214,10,0.4)','rgba(48,209,88,0.45)','rgba(255,159,10,0.4)','rgba(41,151,255,0.4)','rgba(175,82,222,0.4)'],['rgba(255,214,10,0.8)','rgba(255,159,10,0.8)','rgba(255,214,10,0.7)','rgba(48,209,88,0.7)','rgba(255,159,10,0.7)','rgba(41,151,255,0.7)','rgba(175,82,222,0.7)']);
+
+// ═══════════════════════════════════════
+// 13. STAT BAR ANIMATION
+// ═══════════════════════════════════════
+const sbObs=new IntersectionObserver((es)=>{es.forEach(e=>{if(e.isIntersecting){e.target.querySelectorAll('.stat-fill').forEach(f=>{const w=f.style.width;f.style.width='0%';requestAnimationFrame(()=>{f.style.width=w})})}})},{threshold:.2});
+document.querySelectorAll('.cw,.card').forEach(w=>sbObs.observe(w));
+
+console.log('🔮 本命星盘可视化报告 v3.0 已就绪');
+console.log('💫 全部交互：展开卡片 · 翻转场景 · 点击时间线 · 趋势仪表盘 · 总结记分板');
+</script>
+</body>
+</html>
